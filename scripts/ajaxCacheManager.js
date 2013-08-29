@@ -1,3 +1,12 @@
+// Copyright 2013, Ben Russell - br@x-plugins.com
+
+// AJAX Cache Manager for localStorage.
+
+// Applies LRU rules to try and keep the cache at ~max 3 megs.
+// Can overflow, beware of very large chunks. 
+// Two three meg requests would be a problem.
+
+// Applies Maximum content age rule: default max is 1 hour.
 
 
 
@@ -67,6 +76,87 @@ var ajaxCacheManager = {
 	
 	
 	
+	
+	getCacheManifestItemByUri: function( uri ){
+		
+		//console.warn( sprintf("ajaxCacheManager.getCacheManifestItemByUri(%s)", uri) );
+
+		var cache_items_count = this.cache_items.length;
+		for( var cache_x = 0; cache_x < cache_items_count; cache_x++ ){
+			var item = this.cache_items[ cache_x ];
+		
+			if( item.ls_key == uri ){
+				//console.log(" * Item located, returning.." );
+				return item;
+			}
+			
+		}//end loop all cache manifest entries
+		
+		
+		//If we make it this far the item is not in the cache.	
+		//console.warn(" * Manifest contains no data for given uri." );
+		return null;
+				
+	},
+
+
+	removeCacheManifestItemByUri: function( uri ){
+		
+		//console.warn( sprintf("ajaxCacheManager.getCacheManifestItemByUri(%s)", uri) );
+
+		var cache_items_count = this.cache_items.length;
+		for( var cache_x = 0; cache_x < cache_items_count; cache_x++ ){
+			var item = this.cache_items[ cache_x ];
+		
+			if( item.ls_key == uri ){
+				console.warn(" * Removing localStorage cache entry data.");
+
+				localStorage.removeItem( uri );
+
+				this.cache_items.splice( cache_x, 1 ); //kill tracking data.
+				return; //job done, lets go home.
+				
+			}
+			
+		}//end loop all cache manifest entries
+		
+	},
+
+	
+	
+	
+	/*
+	Checks the age of a cache entry and enforces a maximum age value.
+	*/
+	freshnessCheck: function( uri ){
+		
+		//modify this value to configure the maximum allowable age for a cache entry.
+		var utc_delta_max_hours = 1;
+		var utc_delta_max = utc_delta_max_hours * (60 * 60);
+	
+	
+		var utc_now = this.getUTCInteger();
+		//console.warn("UTC: " + utc_now);
+	
+		//fetch cache registry item by uri
+		var manifest_item = this.getCacheManifestItemByUri( uri );
+		if( manifest_item != null ){
+			
+			var utc_delta = utc_now - manifest_item.last_get; //calculate the age of this cache item.		
+			//console.warn( sprintf(" * Cache item is %d seconds old. Max Age: %d", utc_delta, utc_delta_max ) );
+			
+			if( utc_delta > utc_delta_max ){
+				this.removeCacheManifestItemByUri( uri );
+			} //end check age of item in cache				
+			
+		} //end check for returned manifest_item
+
+	}, //end freshnessCheck
+	
+	
+	
+	
+	
 	cleanupCache: function(){
 		
 		console.warn( "ajaxCacheManager.cleanupCache()...");
@@ -110,6 +200,55 @@ var ajaxCacheManager = {
 	
 	
 	
+	
+	//FIXME: this function is a clone of cleanupCache, needs logic revisions before exposing.
+	/*
+	clearCache: function(){
+		
+		console.warn( "ajaxCacheManager.clearCache()...");
+		var utc_now = this.getUTCInteger();
+
+		//find the oldest item and delete it. we should loop this until we cleanup a nice chunk of space.		
+		//for( var old_x=0; old_x < 1; old_x++ ){
+		while( this.getCacheSize() >= this.getMaxCacheSize() ){
+			var cache_items_count = this.cache_items.length;
+
+			//console.log("Finding oldest item..");
+		
+			var oldest_date = utc_now; //we're looking for cached items older than now.
+			var oldest_cache_x = 0; //position marker to track where the oldest item in the array is.
+
+			for( var cache_x = 0; cache_x < cache_items_count; cache_x++ ){
+				//console.log("Stale check..");			
+				var item = this.cache_items[ cache_x ];
+			
+				if( item.last_get < oldest_date ){
+					//console.log("New target..");
+					oldest_date = item.last_get;
+					oldest_cache_x = cache_x;
+				}
+				
+			}//end loop all cache manifest entries
+		
+			var delete_target = this.cache_items[ oldest_cache_x ];
+			//console.log("reclaiming: " + delete_target.length + " bytes");
+			localStorage.removeItem( delete_target.ls_key );
+			this.cache_items.splice( oldest_cache_x, 1 ); //kill tracking data.
+			
+			//console.log("Oldest cache item removed.");
+			
+		}//repeat cache clean until we're below max
+		
+		
+		console.log( sprintf(" Cache size: %d / %d", this.getCacheSize(), this.getMaxCacheSize() ) );
+		
+	},
+	*/
+	
+	
+	
+	
+	
 	getUrl: function( uri, cb_f_core ){
 		//console.warn("TajaxCacheManager.getUrl( uri, cb_f_http, cb_f_core )");
 		
@@ -145,11 +284,7 @@ var ajaxCacheManager = {
 				//We get to handle creating the cache data.
 				
 				try{
-					//HTTP GET event in console log data implies this..
 					//console.log("Cache create: (" + uri + ")" );
-					
-					//var d_now = new Date();
-					//console.warn( d_now.UTC() );
 					
 					var manifest_entry = { ls_key: uri, length: data.length, last_get: ajaxCacheManager.getUTCInteger() };
 					_cache_items.push( manifest_entry );
@@ -194,6 +329,9 @@ var ajaxCacheManager = {
 		
 		
 			if( supports_html5_storage() ){
+
+				this.freshnessCheck( uri );
+				
 
 				var query_result = localStorage.getItem( uri );
 				if( query_result ){
