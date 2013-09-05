@@ -12,7 +12,10 @@
 
 var ajaxCacheManager = {
 
-	cache_items: new Array(),
+
+
+    //filled with example data to describe the data format only.
+    cache_items: [ { ls_key: "uri", length: 0, last_get: 0 } ],
 	
 	manifest_key: "ajaxCacheManager_manifest",
 
@@ -34,7 +37,24 @@ var ajaxCacheManager = {
 	}, //end loadState()
 
 
-	getCacheSize: function(){
+
+
+    getUTCInteger: function(){
+        var now = new Date();
+        return Date.UTC(
+            now.getUTCFullYear(),
+            now.getUTCMonth(),
+            now.getUTCDate(),
+            now.getUTCHours(),
+            now.getUTCMinutes(),
+            now.getUTCSeconds()
+        ) / 1000;
+    }, //end: getUTCInteger()
+
+
+
+
+    getCacheSize: function(){
 	
 		var cache_items_count = this.cache_items.length;
 		var total_cache_size = 0;
@@ -248,13 +268,15 @@ var ajaxCacheManager = {
 	
 	
 	
-	
+	/*
+	Use this function to retrieve your content. cbf_core = function( data, uri )
+	 */
 	getUrl: function( uri, cb_f_core ){
 		//console.warn("TajaxCacheManager.getUrl( uri, cb_f_http, cb_f_core )");
 		
 		
 		if( cb_f_core == null ){
-			console.error("cb_f_core is null, aborting.");
+			console.error("cb_f_core is null, aborting getUrl(..)");
 			return false; //FIXME: throw error?
 		}
 		
@@ -299,12 +321,12 @@ var ajaxCacheManager = {
 					//FIXME: Magic numbers; convert to constant defs.	
 					switch( err.code ){
 						case 1014: //quota exceeded on desktop
-						case 22: //quota exceeded on android chrome
+                        case 22: //quota exceeded on android chrome
 								console.error("LocalStorage: Quota Reached:" + localStorage.length);
 								
 								ajaxCacheManager.cleanupCache();
 								
-								//FIXME: repeat call? obsoleted? what?
+								//FIXME: CRITICAL: cache failed: repeat call? obsoleted? what?
 								
 								//ajaxCacheManager.saveState();
 								//ajaxCacheManager.loadState();
@@ -365,18 +387,7 @@ var ajaxCacheManager = {
 	
 	
 	
-	getUTCInteger: function(){
-		var now = new Date(); 
-		return Date.UTC(	
-						now.getUTCFullYear(), 
-						now.getUTCMonth(), 
-						now.getUTCDate(),  
-						now.getUTCHours(), 
-						now.getUTCMinutes(), 
-						now.getUTCSeconds()						
-						) / 1000;
-	}, //end: getUTCInteger()
-	
+
 	
 	touchManifest: function( uri ){
 	
