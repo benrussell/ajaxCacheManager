@@ -152,7 +152,7 @@ var ajaxCacheManager = {
 	freshnessCheck: function( uri ){
 		
 		//modify this value to configure the maximum allowable age for a cache entry.
-		var utc_delta_max_hours = 1;
+		var utc_delta_max_hours = 1; //FIXME: export this to a member var defined at top of script for easier reconfig.
 		var utc_delta_max = utc_delta_max_hours * (60 * 60);
 	
 	
