@@ -24,8 +24,7 @@ var ajaxCacheManager = {
 	
 	loadState: function(){		
 		
-		var tmp_items = [];		
-		eval( "tmp_items = " + localStorage.getItem( this.manifest_key ) );	
+		var tmp_items = JSON.parse( localStorage.getItem( this.manifest_key ) );
 		
 		if( tmp_items != null ){
 			this.cache_items = tmp_items;
@@ -216,7 +215,9 @@ var ajaxCacheManager = {
 		
 		
 		console.log( sprintf(" Cache size: %d / %d", this.getCacheSize(), this.getMaxCacheSize() ) );
-		
+
+        this.saveState();
+
 	},
 	
 	
@@ -323,12 +324,14 @@ var ajaxCacheManager = {
 					switch( err.code ){
 						case 1014: //quota exceeded on desktop
                         case 22: //quota exceeded on android chrome
-								console.error("LocalStorage: Quota Reached:" + localStorage.length);
+								console.warn("LocalStorage: Quota Reached: Cache Entries:" + localStorage.length);
 								
 								ajaxCacheManager.cleanupCache();
 								
 								//FIXME: CRITICAL: cache failed: repeat call? obsoleted? what?
-								
+
+                                _cb_f_core( data, uri );
+
 								//ajaxCacheManager.saveState();
 								//ajaxCacheManager.loadState();
 						
@@ -359,7 +362,7 @@ var ajaxCacheManager = {
 				var query_result = localStorage.getItem( uri );
 				if( query_result ){
 			
-					console.log( sprintf("Cache hit: (%s)", uri) );
+					//console.log( sprintf("Cache hit: (%s)", uri) );
 					
 					this.touchManifest( uri ); //update date stamp details.
 					
@@ -369,6 +372,7 @@ var ajaxCacheManager = {
 		
 					//HTTP GET event implies this log event:
 					//console.warn( sprintf("Cache miss: (%s)", uri) );
+                    console.log(" * Cache miss.");
 					
 					xmlGetRequest( uri, cb_f );
 						
@@ -378,7 +382,6 @@ var ajaxCacheManager = {
 			}else{
 	
 				//localStorage is not supported.				
-				console.warn("No cache: products/index");
 				xmlGetRequest( uri, cb_f );
 				
 			} //end check for localStorage support.
