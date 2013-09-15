@@ -9,6 +9,15 @@
 // Applies Maximum content age rule: default max is 1 hour.
 
 
+function supports_html5_storage() {
+    try {
+        return 'localStorage' in window && window['localStorage'] !== null;
+    } catch (e) {
+        return false;
+    }
+}
+
+
 
 
 var ajaxCacheManager = {
@@ -172,12 +181,42 @@ var ajaxCacheManager = {
 		} //end check for returned manifest_item
 
 	}, //end freshnessCheck
-	
-	
-	
-	
-	
-	cleanupCache: function(){
+
+
+
+
+
+    clearCache: function(){
+
+        console.warn( "ajaxCacheManager.clearCache()...");
+
+            var cache_items_count = this.cache_items.length;
+
+            for( var cache_x = 0; cache_x < cache_items_count; cache_x++ ){
+                //console.log("Stale check..");
+                var item = this.cache_items[ cache_x ];
+
+                    //delete the item
+                    var delete_target = this.cache_items[ cache_x ];
+                    localStorage.removeItem( delete_target.ls_key );
+
+            }//end loop all cache manifest entries
+
+            this.cache_items = [];
+
+        console.log( sprintf(" Cache size: %d / %d", this.getCacheSize(), this.getMaxCacheSize() ) );
+
+        //this.saveState();
+
+        localStorage.removeItem("ajaxCacheManager_manifest");
+
+    }, //clearCache
+
+
+
+
+
+    cleanupCache: function(){
 		
 		console.warn( "ajaxCacheManager.cleanupCache()...");
 		var utc_now = this.getUTCInteger();
