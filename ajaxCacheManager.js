@@ -95,7 +95,7 @@ var ajaxCacheManager = {
 		//console.warn(sprintf("Cache size: %0.2f", total_cache_size/(1024 * 1024)));
 		
 		if( total_cache_size > this.getMaxCacheSize() ){
-			console.warn("Cache needs cleanup.");
+			//console.warn("Cache needs cleanup.");
 			
 			this.cleanupCache();
 		}
@@ -218,7 +218,7 @@ var ajaxCacheManager = {
 
     cleanupCache: function(){
 		
-		console.warn( "ajaxCacheManager.cleanupCache()...");
+		//console.warn( "ajaxCacheManager.cleanupCache()...");
 		var utc_now = this.getUTCInteger();
 
 		//find the oldest item and delete it. we should loop this until we cleanup a nice chunk of space.		
@@ -253,7 +253,7 @@ var ajaxCacheManager = {
 		}//repeat cache clean until we're below max
 		
 		
-		console.log( sprintf(" Cache size: %d / %d", this.getCacheSize(), this.getMaxCacheSize() ) );
+		//console.warn( sprintf("ajcm: Cache size: %d / %d", this.getCacheSize(), this.getMaxCacheSize() ) );
 
         this.saveState();
 
@@ -358,6 +358,11 @@ var ajaxCacheManager = {
 					ajaxCacheManager.saveState();
 
 				} catch( err ){
+
+					console.log( err );
+					if( err.message != null ){
+						console.log( err.message );
+					}
 			
 					//FIXME: Magic numbers; convert to constant defs.	
 					switch( err.code ){
@@ -411,7 +416,7 @@ var ajaxCacheManager = {
 		
 					//HTTP GET event implies this log event:
 					//console.warn( sprintf("Cache miss: (%s)", uri) );
-                    console.log(" * Cache miss.");
+                    //console.log(" * Cache miss.");
 					
 					xmlGetRequest( uri, cb_f );
 						
