@@ -1,0 +1,35 @@
+<script src='../ajax_helper.js'></script>
+
+<script src='../dates_iso8601.js'></script>
+
+<script src='../sprintf.min.js'></script>
+
+<script src='../ajaxCacheManager.js'></script>
+
+
+<script>
+    
+    function cb_yay( data, url ){
+        alert( data );    
+    
+    }
+    
+    
+    if( supports_html5_storage() ){
+        
+        document.write("AJCM init time..");
+        
+        var ajcm = ajaxCacheManager;
+        ajcm.loadState();
+        
+        ajcm.getUrl( "/example/test_data.json", cb_yay );
+        
+        
+    }else{
+        alert("HTML5 Local Store Not supported!");
+        
+    }
+    
+    
+</script>
+
